@@ -39,6 +39,9 @@ namespace ALE_Rotorgun_Detection.Patch {
 
             MyMotorBase motor = __instance as MyMotorBase;
 
+            if (motor == null)
+                return true;
+
             RotorgunDetectorPlugin plugin = RotorgunDetectorPlugin.Instance;
 
             var cooldowns = plugin.DetachCooldowns;
