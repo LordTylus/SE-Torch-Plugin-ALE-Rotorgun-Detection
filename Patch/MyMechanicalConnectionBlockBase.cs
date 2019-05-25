@@ -12,7 +12,7 @@ using Torch.Utils;
 namespace ALE_Rotorgun_Detection.Patch {
     public class MyMechanicalConnectionBlockBasePatch {
 
-        public static readonly Logger Log = LogManager.GetCurrentClassLogger();
+        public static readonly Logger Log = LogManager.GetLogger("RotorgunDetectorPlugin");
 
         [ReflectedMethodInfo(typeof(MyMechanicalConnectionBlockBasePatch), "DetachDetection")]
         private static readonly MethodInfo detachDetection;
@@ -31,7 +31,7 @@ namespace ALE_Rotorgun_Detection.Patch {
 
             } catch (Exception e) {
 
-                Log.Error("Unable to patch MyMotorStator", e);
+                Log.Error("Unable to patch MyMechanicalConnectionBlockBase", e);
             }
         }
 
@@ -55,8 +55,6 @@ namespace ALE_Rotorgun_Detection.Patch {
                 long remainingSeconds = cooldown.getRemainingSeconds("detach");
 
                 if (remainingSeconds != 0) {
-
-                    Log.Info("Detach Remaining Seconds " + remainingSeconds);
 
                     long ownerId = motor.OwnerId;
 
@@ -98,8 +96,6 @@ namespace ALE_Rotorgun_Detection.Patch {
                 long remainingSeconds = cooldown.getRemainingSeconds("logging");
 
                 if (remainingSeconds != 0) {
-
-                    Log.Info("Logging Remaining Seconds " + remainingSeconds);
                     return;
                 }
 
