@@ -104,6 +104,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RotorgunDetectorManager.cs" />
+    <Compile Include="CurrentCooldown.cs" />
+    <Compile Include="Patch\MyMechanicalConnectionBlockBase.cs" />
     <Compile Include="RotorgunDetectorPlugin.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

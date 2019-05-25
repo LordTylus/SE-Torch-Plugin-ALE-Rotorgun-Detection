@@ -14,8 +14,7 @@ namespace ALE_PcuTransferrer.Utils
             return null;
         }
 
-        public static string GetPlayerNameById(long playerId)
-        {
+        public static string GetPlayerNameById(long playerId) {
 
             MyIdentity identity = GetIdentityById(playerId);
 

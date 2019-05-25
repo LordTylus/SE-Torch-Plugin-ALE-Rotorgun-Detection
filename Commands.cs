@@ -31,48 +31,11 @@ namespace ALE_Rotorgun_Detection {
 
             foreach (var group in MyCubeGridGroups.Static.Physical.Groups) {
 
-                HashSet<long> gridIdsWithRotor = new HashSet<long>();
-
                 MyCubeGrid biggestGrid = null;
-                double num = 0.0;
 
-                foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in group.Nodes) {
+                int gridsWithRotorCount = checkGroup(out biggestGrid, group);
 
-                    MyCubeGrid cubeGrid = groupNodes.NodeData;
-
-                    if (cubeGrid == null)
-                        continue;
-
-                    if (cubeGrid.Physics == null)
-                        continue;
-
-                    double volume = cubeGrid.PositionComp.WorldAABB.Size.Volume;
-                    if (volume > num) {
-                        num = volume;
-                        biggestGrid = cubeGrid;
-                    }
-
-                    HashSet<MySlimBlock> blocks = new HashSet<MySlimBlock>(cubeGrid.GetBlocks());
-                    foreach (MySlimBlock block in blocks) {
-
-                        if (block == null || block.CubeGrid == null || block.IsDestroyed)
-                            continue;
-
-                        MyCubeBlock cubeBlock = block.FatBlock;
-
-                        if (cubeBlock == null)
-                            continue;
-
-                        MyMotorStator rotor = cubeBlock as MyMotorStator;
-
-                        if (rotor != null) {
-                            gridIdsWithRotor.Add(cubeGrid.EntityId);
-                            break;
-                        }
-                    }
-                }
-
-                if(gridIdsWithRotor.Count > 3) {
+                if(gridsWithRotorCount >= Plugin.MinRotorGridCount) {
 
                     var gridOwnerList = biggestGrid.BigOwners;
                     var ownerCnt = gridOwnerList.Count;
@@ -100,6 +63,52 @@ namespace ALE_Rotorgun_Detection {
 
                 ModCommunication.SendMessageTo(new DialogMessage("Potential Rotorguns", $"At least 3 rotors on different subgrids.", sb.ToString()), Context.Player.SteamUserId);
             }
+        }
+
+        public static int checkGroup(out MyCubeGrid biggestGrid, MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group group) {
+
+            HashSet<long> gridIdsWithRotor = new HashSet<long>();
+
+            double num = 0.0;
+            biggestGrid = null;
+
+            foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in group.Nodes) {
+
+                MyCubeGrid cubeGrid = groupNodes.NodeData;
+
+                if (cubeGrid == null)
+                    continue;
+
+                if (cubeGrid.Physics == null)
+                    continue;
+
+                double volume = cubeGrid.PositionComp.WorldAABB.Size.Volume;
+                if (volume > num) {
+                    num = volume;
+                    biggestGrid = cubeGrid;
+                }
+
+                HashSet<MySlimBlock> blocks = new HashSet<MySlimBlock>(cubeGrid.GetBlocks());
+                foreach (MySlimBlock block in blocks) {
+
+                    if (block == null || block.CubeGrid == null || block.IsDestroyed)
+                        continue;
+
+                    MyCubeBlock cubeBlock = block.FatBlock;
+
+                    if (cubeBlock == null)
+                        continue;
+
+                    MyMotorStator rotor = cubeBlock as MyMotorStator;
+
+                    if (rotor != null) {
+                        gridIdsWithRotor.Add(cubeGrid.EntityId);
+                        break;
+                    }
+                }
+            }
+
+            return gridIdsWithRotor.Count;
         }
     }
 }
