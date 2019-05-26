@@ -38,7 +38,7 @@
         <Button Grid.Column="2" Grid.Row="4" Content="Save Config" Margin="5" Click="SaveButton_OnClick"></Button>
 
         <TextBlock Grid.Column="0" Grid.Row ="5" VerticalAlignment="Center" Grid.ColumnSpan="2" Text="Commands" Margin="5" FontWeight="Bold" />
-        <TextBlock Grid.Column="0" Grid.Row ="6" VerticalAlignment="Center" Text="!findrotorgun" Margin="5" />
+        <TextBlock Grid.Column="0" Grid.Row ="6" VerticalAlignment="Center" Text="!findrotorgun [-gps]" Margin="5" />
         <TextBlock Grid.Column="1" Grid.Row ="6" VerticalAlignment="Center" Grid.ColumnSpan="2" TextWrapping="Wrap" Text="Checks for grids that could porentially be a rotorgun and lists them." Margin="5"/>
 
 

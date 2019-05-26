@@ -3,6 +3,7 @@ using NLog;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Cube;
 using Sandbox.Game.World;
+using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +27,16 @@ namespace ALE_Rotorgun_Detection {
         [Command("findrotorgun", "Looks for rotorguns on the server!")]
         [Permission(MyPromoteLevel.Moderator)]
         public void DetectRotorguns() {
+
+            List<string> args = Context.Args;
+
+            bool gps = false;
+
+            for (int i = 0; i < args.Count; i++) {
+
+                if (args[i] == "-gps")
+                    gps = true;
+            }
 
             StringBuilder sb = new StringBuilder();
 
@@ -51,6 +62,13 @@ namespace ALE_Rotorgun_Detection {
                     sb.AppendLine($"{biggestGrid.DisplayName}");
                     sb.AppendLine($"   Owned by {PlayerUtils.GetPlayerNameById(gridOwner)}");
                     sb.AppendLine($"   Location: X: {position.X.ToString("#,##0.00")}, Y: {position.Y.ToString("#,##0.00")}, Z: {position.Z.ToString("#,##0.00")}");
+
+                    if (gps && Context.Player != null) {
+
+                        var gridGPS = MyAPIGateway.Session?.GPS.Create("--" + biggestGrid.DisplayName, ($"{biggestGrid.DisplayName} - {biggestGrid.GridSizeEnum} - {biggestGrid.BlocksCount} blocks"), position, true);
+
+                        MyAPIGateway.Session?.GPS.AddGps(Context.Player.IdentityId, gridGPS);
+                    }
                 }
             }
 
@@ -61,7 +79,7 @@ namespace ALE_Rotorgun_Detection {
 
             } else {
 
-                ModCommunication.SendMessageTo(new DialogMessage("Potential Rotorguns", $"At least 3 rotors on different subgrids.", sb.ToString()), Context.Player.SteamUserId);
+                ModCommunication.SendMessageTo(new DialogMessage("Potential Rotorguns", $"At least "+Plugin.MinRotorGridCount+" rotors on different subgrids.", sb.ToString()), Context.Player.SteamUserId);
             }
         }
 
