@@ -46,7 +46,7 @@ namespace ALE_Rotorgun_Detection {
 
                 int gridsWithRotorCount = checkGroup(out biggestGrid, group);
 
-                if(gridsWithRotorCount >= Plugin.MinRotorGridCount) {
+                if (gridsWithRotorCount >= Plugin.MinRotorGridCount + 1) {
 
                     var gridOwnerList = biggestGrid.BigOwners;
                     var ownerCnt = gridOwnerList.Count;
@@ -79,16 +79,16 @@ namespace ALE_Rotorgun_Detection {
 
             } else {
 
-                ModCommunication.SendMessageTo(new DialogMessage("Potential Rotorguns", $"At least "+Plugin.MinRotorGridCount+" rotors on different subgrids.", sb.ToString()), Context.Player.SteamUserId);
+                ModCommunication.SendMessageTo(new DialogMessage("Potential Rotorguns", $"At least " + Plugin.MinRotorGridCount + " rotors on different subgrids.", sb.ToString()), Context.Player.SteamUserId);
             }
         }
 
         public static int checkGroup(out MyCubeGrid biggestGrid, MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group group) {
 
-            HashSet<long> gridIdsWithRotor = new HashSet<long>();
-
             double num = 0.0;
             biggestGrid = null;
+
+            Dictionary<MyCubeGrid, List<TopPart>> connectionMap = new Dictionary<MyCubeGrid, List<TopPart>>();
 
             foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in group.Nodes) {
 
@@ -117,16 +117,69 @@ namespace ALE_Rotorgun_Detection {
                     if (cubeBlock == null)
                         continue;
 
-                    MyMotorStator rotor = cubeBlock as MyMotorStator;
+                    MyMotorBase rotor = cubeBlock as MyMotorBase;
 
                     if (rotor != null) {
-                        gridIdsWithRotor.Add(cubeGrid.EntityId);
-                        break;
+
+                        MyCubeGrid top = rotor.TopGrid;
+                        MyCubeGrid bottom = cubeGrid;
+
+                        List<TopPart> connections;
+
+                        if (top != null && !connectionMap.ContainsKey(top))
+                            connectionMap.Add(top, new List<TopPart>());
+
+                        if (!connectionMap.ContainsKey(bottom)) {
+
+                            connections = new List<TopPart>();
+                            connectionMap.Add(bottom, connections);
+
+                        } else {
+
+                            connections = connectionMap[bottom];
+                        }
+
+                        connections.Add(new TopPart(top));
                     }
                 }
             }
 
-            return gridIdsWithRotor.Count;
+            int maxCount = 0;
+
+            foreach (MyCubeGrid grid in connectionMap.Keys)
+                maxCount = Math.Max(maxCount, getMaxTiefe(grid, connectionMap));
+
+            return maxCount;
+        }
+
+        private static int getMaxTiefe(MyCubeGrid grid, Dictionary<MyCubeGrid, List<TopPart>> connectionMap) {
+
+            int count = 1;
+
+            List<TopPart> connections = connectionMap[grid];
+
+            int childCount = 0;
+
+            foreach (TopPart child in connections) {
+
+                if(child.top == null) {
+                    childCount = Math.Max(childCount, 1);
+                    continue;
+                }
+
+                childCount = Math.Max(childCount, getMaxTiefe(child.top, connectionMap));
+            }
+                
+            return count + childCount;
+        }
+
+        private class TopPart {
+
+            public readonly MyCubeGrid top;
+
+            public TopPart(MyCubeGrid top) {
+                this.top = top;
+            }
         }
     }
 }
