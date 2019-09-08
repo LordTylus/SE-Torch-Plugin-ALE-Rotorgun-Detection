@@ -46,7 +46,7 @@ namespace ALE_Rotorgun_Detection {
 
                 int gridsWithRotorCount = checkGroup(out biggestGrid, group);
 
-                if (gridsWithRotorCount >= Plugin.MinRotorGridCount + 1) {
+                if (biggestGrid != null && gridsWithRotorCount >= Plugin.MinRotorGridCount) {
 
                     var gridOwnerList = biggestGrid.BigOwners;
                     var ownerCnt = gridOwnerList.Count;
@@ -85,8 +85,11 @@ namespace ALE_Rotorgun_Detection {
 
         public static int checkGroup(out MyCubeGrid biggestGrid, MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group group) {
 
-            double num = 0.0;
             biggestGrid = null;
+
+            try { 
+
+            double num = 0.0;
 
             Dictionary<MyCubeGrid, List<TopPart>> connectionMap = new Dictionary<MyCubeGrid, List<TopPart>>();
 
@@ -146,17 +149,26 @@ namespace ALE_Rotorgun_Detection {
 
             int maxCount = 0;
 
-            foreach (MyCubeGrid grid in connectionMap.Keys)
+            foreach (MyCubeGrid grid in new List<MyCubeGrid>(connectionMap.Keys))
                 maxCount = Math.Max(maxCount, getMaxTiefe(grid, connectionMap));
 
             return maxCount;
+
+            } catch(Exception e) {
+                Log.Error(e, "Error while checking grid!");
+                return 0;
+            }
         }
 
         private static int getMaxTiefe(MyCubeGrid grid, Dictionary<MyCubeGrid, List<TopPart>> connectionMap) {
 
             int count = 1;
 
+            if (!connectionMap.ContainsKey(grid))
+                return 0;
+
             List<TopPart> connections = connectionMap[grid];
+            connectionMap.Remove(grid);
 
             int childCount = 0;
 
