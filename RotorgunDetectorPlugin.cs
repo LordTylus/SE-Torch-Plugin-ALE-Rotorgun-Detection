@@ -10,7 +10,6 @@ using System.Windows.Controls;
 using Torch;
 using Torch.API;
 using Torch.API.Plugins;
-using VRage.Scripting;
 
 namespace ALE_Rotorgun_Detection
 {
@@ -19,8 +18,8 @@ namespace ALE_Rotorgun_Detection
         public static readonly Logger Log = LogManager.GetCurrentClassLogger();
         public static RotorgunDetectorPlugin Instance { get; private set; }
 
-        private ConcurrentDictionary<long, CurrentCooldown> _detachCooldowns = new ConcurrentDictionary<long, CurrentCooldown>();
-        private ConcurrentDictionary<long, CurrentCooldown> _loggingCooldowns = new ConcurrentDictionary<long, CurrentCooldown>();
+        private readonly ConcurrentDictionary<long, CurrentCooldown> _detachCooldowns = new ConcurrentDictionary<long, CurrentCooldown>();
+        private readonly ConcurrentDictionary<long, CurrentCooldown> _loggingCooldowns = new ConcurrentDictionary<long, CurrentCooldown>();
 
         public ConcurrentDictionary<long, CurrentCooldown> DetachCooldowns { get { return _detachCooldowns; } }
         public ConcurrentDictionary<long, CurrentCooldown> LoggingCooldowns { get { return _loggingCooldowns; } }
