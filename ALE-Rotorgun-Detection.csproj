@@ -145,7 +145,6 @@
       <DependentUpon>Control.xaml</DependentUpon>
     </Compile>
     <Compile Include="RotorgunDetectorConfig.cs" />
-    <Compile Include="RotorgunDetectorManager.cs" />
     <Compile Include="CurrentCooldown.cs" />
     <Compile Include="Patch\MyMechanicalConnectionBlockBase.cs" />
     <Compile Include="RotorgunDetectorPlugin.cs" />

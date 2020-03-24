@@ -58,9 +58,6 @@ namespace ALE_Rotorgun_Detection
                 _config.Save();
             }
 
-            var pgmr = new RotorgunDetectorManager(torch);
-            torch.Managers.AddManager(pgmr);
-
             Instance = this;
         }
     }

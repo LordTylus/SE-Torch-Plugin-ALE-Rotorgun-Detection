@@ -6,11 +6,14 @@ using Sandbox.Game.Entities.Blocks;
 using Sandbox.Game.Entities.Cube;
 using System;
 using System.Reflection;
+using Torch.API.Session;
 using Torch.Managers.PatchManager;
 using Torch.Utils;
 
 namespace ALE_Rotorgun_Detection.Patch {
-    public class MyMechanicalConnectionBlockBasePatch {
+
+    [PatchShim]
+    public static class MyMechanicalConnectionBlockBasePatch {
 
         public static readonly Logger Log = LogManager.GetLogger("RotorgunDetectorPlugin");
 
@@ -19,27 +22,20 @@ namespace ALE_Rotorgun_Detection.Patch {
 
         public static void Patch(PatchContext ctx) {
 
-            ReflectedManager.Process(typeof(MyMechanicalConnectionBlockBasePatch));
+            MethodInfo detach = typeof(MyMechanicalConnectionBlockBase).GetMethod("CreateTopPartAndAttach", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(long), typeof(bool), typeof(bool) }, null);
 
-            try {
+            ctx.GetPattern(detach).Prefixes.Add(detachDetection);
 
-                MethodInfo detach = typeof(MyMechanicalConnectionBlockBase).GetMethod("CreateTopPartAndAttach", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(long), typeof(bool), typeof(bool) }, null);
-
-                ctx.GetPattern(detach).Prefixes.Add(detachDetection);
-
-                Log.Info("Patched MyMotorStator!");
-
-            } catch (Exception e) {
-
-                Log.Error("Unable to patch MyMechanicalConnectionBlockBase", e);
-            }
+            Log.Debug("Patched MyMotorStator!");
         }
 
         public static bool DetachDetection(MyMechanicalConnectionBlockBase __instance) {
+            
+            if (!(__instance is MyMotorBase motor))
+                return true;
 
-            MyMotorBase motor = __instance as MyMotorBase;
-
-            if (motor == null)
+            var session = RotorgunDetectorPlugin.Instance.Torch.CurrentSession;
+            if (session == null || session.State != TorchSessionState.Loaded)
                 return true;
 
             RotorgunDetectorPlugin plugin = RotorgunDetectorPlugin.Instance;
@@ -48,12 +44,11 @@ namespace ALE_Rotorgun_Detection.Patch {
 
             var grid = motor.CubeGrid;
 
-            if (!isPossibleRotorgun(grid, plugin.MinRotorGridCount))
+            if (!IsPossibleRotorgun(grid, plugin.MinRotorGridCount))
                 return true;
 
-            CurrentCooldown cooldown = null;
 
-            if (cooldowns.TryGetValue(grid.EntityId, out cooldown)) {
+            if (cooldowns.TryGetValue(grid.EntityId, out CurrentCooldown cooldown)) {
 
                 long remainingSeconds = cooldown.getRemainingSeconds("detach");
 
@@ -62,7 +57,7 @@ namespace ALE_Rotorgun_Detection.Patch {
                     long ownerId = motor.OwnerId;
 
                     if (ownerId != 0)
-                        MyVisualScriptLogicProvider.SendChatMessage("Rotor Head cannot be placed for an other " + remainingSeconds + " seconds.","Server",ownerId,"Red");
+                        MyVisualScriptLogicProvider.SendChatMessage("Rotor Head cannot be placed for an other " + remainingSeconds + " seconds.", "Server", ownerId, "Red");
 
                     DoLogging(grid);
 
@@ -82,7 +77,7 @@ namespace ALE_Rotorgun_Detection.Patch {
             return true;
         }
 
-        private static bool isPossibleRotorgun(MyCubeGrid grid, int minRotorCount) {
+        private static bool IsPossibleRotorgun(MyCubeGrid grid, int minRotorCount) {
             return Commands.checkGroup(out _, MyCubeGridGroups.Static.Physical.GetGroup(grid)) >= minRotorCount;
         }
 
@@ -92,9 +87,7 @@ namespace ALE_Rotorgun_Detection.Patch {
 
             var cooldowns = plugin.LoggingCooldowns;
 
-            CurrentCooldown cooldown = null;
-
-            if (cooldowns.TryGetValue(grid.EntityId, out cooldown)) {
+            if (cooldowns.TryGetValue(grid.EntityId, out CurrentCooldown cooldown)) {
 
                 long remainingSeconds = cooldown.getRemainingSeconds("logging");
 
