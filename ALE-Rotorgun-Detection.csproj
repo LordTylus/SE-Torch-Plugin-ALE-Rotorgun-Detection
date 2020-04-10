@@ -141,19 +141,19 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Control.xaml.cs">
+    <Compile Include="ALE-Rotorgun-Detection\Control.xaml.cs">
       <DependentUpon>Control.xaml</DependentUpon>
     </Compile>
-    <Compile Include="RotorgunDetectorConfig.cs" />
-    <Compile Include="CurrentCooldown.cs" />
-    <Compile Include="Patch\MyMechanicalConnectionBlockBase.cs" />
-    <Compile Include="RotorgunDetectorPlugin.cs" />
-    <Compile Include="Commands.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils\PlayerUtils.cs" />
+    <Compile Include="ALE-Rotorgun-Detection\RotorgunDetectorConfig.cs" />
+    <Compile Include="ALE-Rotorgun-Detection\CurrentCooldown.cs" />
+    <Compile Include="ALE-Rotorgun-Detection\Patch\MyMechanicalConnectionBlockBase.cs" />
+    <Compile Include="ALE-Rotorgun-Detection\RotorgunDetectorPlugin.cs" />
+    <Compile Include="ALE-Rotorgun-Detection\Commands.cs" />
+    <Compile Include="ALE-Rotorgun-Detection\Properties\AssemblyInfo.cs" />
+    <Compile Include="ALE-Rotorgun-Detection\Utils\PlayerUtils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Control.xaml">
+    <Page Include="ALE-Rotorgun-Detection\Control.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
