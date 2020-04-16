@@ -1,5 +1,8 @@
-﻿using ALE_PcuTransferrer.Utils;
+﻿using ALE_Core.Cooldown;
+using ALE_Core.Utils;
 using NLog;
+using NLog.Config;
+using NLog.Targets;
 using Sandbox.Game;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Blocks;
@@ -15,10 +18,29 @@ namespace ALE_Rotorgun_Detection.Patch {
     [PatchShim]
     public static class MyMechanicalConnectionBlockBasePatch {
 
-        public static readonly Logger Log = LogManager.GetLogger("RotorgunDetectorPlugin");
+        public static readonly Logger Log = LogManager.GetCurrentClassLogger();
+        public static readonly Logger FILE_LOGGER = LogManager.GetLogger("RotorgunDetectorPlugin");
 
         [ReflectedMethodInfo(typeof(MyMechanicalConnectionBlockBasePatch), "DetachDetection")]
         private static readonly MethodInfo detachDetection;
+
+        static MyMechanicalConnectionBlockBasePatch() {
+
+            var logTarget = new FileTarget {
+                FileName = "Logs/rotorguns-${shortdate}.log",
+                Layout = "${var:logStamp} ${var:logContent}"
+            };
+
+            LogManager.Configuration.AddTarget("rotorguns", logTarget);
+
+            var logRule = new LoggingRule("RotorgunDetectorPlugin", LogLevel.Debug, logTarget) {
+                Final = true
+            };
+
+            LogManager.Configuration.LoggingRules.Insert(0, logRule);
+
+            LogManager.Configuration.Reload();
+        }
 
         public static void Patch(PatchContext ctx) {
 
@@ -40,73 +62,45 @@ namespace ALE_Rotorgun_Detection.Patch {
 
             RotorgunDetectorPlugin plugin = RotorgunDetectorPlugin.Instance;
 
-            var cooldowns = plugin.DetachCooldowns;
-
             var grid = motor.CubeGrid;
 
             if (!IsPossibleRotorgun(grid, plugin.MinRotorGridCount))
                 return true;
 
+            var cooldowns = plugin.DetachCooldowns;
+            var key = new EntityIdCooldownKey(grid.EntityId);
 
-            if (cooldowns.TryGetValue(grid.EntityId, out CurrentCooldown cooldown)) {
+            if(!cooldowns.CheckCooldown(key, "detach", out long remainingSeconds)) {
 
-                long remainingSeconds = cooldown.getRemainingSeconds("detach");
+                long ownerId = motor.OwnerId;
 
-                if (remainingSeconds != 0) {
+                if (ownerId != 0)
+                    MyVisualScriptLogicProvider.SendChatMessage("Rotor Head cannot be placed for an other " + remainingSeconds + " seconds.", "Server", ownerId, "Red");
 
-                    long ownerId = motor.OwnerId;
+                DoLogging(key, grid);
 
-                    if (ownerId != 0)
-                        MyVisualScriptLogicProvider.SendChatMessage("Rotor Head cannot be placed for an other " + remainingSeconds + " seconds.", "Server", ownerId, "Red");
-
-                    DoLogging(grid);
-
-                    return false;
-                }
-
-                cooldown.startCooldown("detach");
-
-            } else {
-
-                cooldown = new CurrentCooldown(plugin.DetachCooldown);
-                cooldowns.TryAdd(grid.EntityId, cooldown);
-
-                cooldown.startCooldown("detach");
+                return false;
             }
+
+            cooldowns.StartCooldown(key, "detach", plugin.DetachCooldown);
 
             return true;
         }
 
         private static bool IsPossibleRotorgun(MyCubeGrid grid, int minRotorCount) {
-            return Commands.checkGroup(out _, MyCubeGridGroups.Static.Physical.GetGroup(grid)) >= minRotorCount;
+            return Commands.CheckGroup(out _, MyCubeGridGroups.Static.Physical.GetGroup(grid)) >= minRotorCount;
         }
 
-        private static void DoLogging(MyCubeGrid grid) {
+        private static void DoLogging(EntityIdCooldownKey cooldownKey, MyCubeGrid grid) {
 
             RotorgunDetectorPlugin plugin = RotorgunDetectorPlugin.Instance;
 
             var cooldowns = plugin.LoggingCooldowns;
 
-            if (cooldowns.TryGetValue(grid.EntityId, out CurrentCooldown cooldown)) {
-
-                long remainingSeconds = cooldown.getRemainingSeconds("logging");
-
-                if (remainingSeconds != 0) {
-                    return;
-                }
-
-                cooldown.startCooldown("logging");
-
-            } else {
-
-                cooldown = new CurrentCooldown(plugin.LoggingCooldown);
-                cooldowns.TryAdd(grid.EntityId, cooldown);
-
-                cooldown.startCooldown("logging");
-            }
-
-            if (grid == null)
+            if (!cooldowns.CheckCooldown(cooldownKey, "logging", out _)) 
                 return;
+
+            cooldowns.StartCooldown(cooldownKey, "logging", plugin.LoggingCooldown);
 
             grid = grid.GetBiggestGridInGroup();
 
@@ -119,7 +113,7 @@ namespace ALE_Rotorgun_Detection.Patch {
             else if (ownerCnt > 1)
                 gridOwner = gridOwnerList[1];
 
-            Log.Warn("Possible Rotorgun found on grid " + grid.DisplayName + " owned by " + PlayerUtils.GetPlayerNameById(gridOwner));
+            FILE_LOGGER.Warn("Possible Rotorgun found on grid " + grid.DisplayName + " owned by " + PlayerUtils.GetPlayerNameById(gridOwner));
         }
     }
 }

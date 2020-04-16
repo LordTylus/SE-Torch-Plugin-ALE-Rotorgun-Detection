@@ -1,4 +1,5 @@
-﻿using NLog;
+﻿using ALE_Core.Cooldown;
+using NLog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,11 +19,8 @@ namespace ALE_Rotorgun_Detection
         public static readonly Logger Log = LogManager.GetCurrentClassLogger();
         public static RotorgunDetectorPlugin Instance { get; private set; }
 
-        private readonly ConcurrentDictionary<long, CurrentCooldown> _detachCooldowns = new ConcurrentDictionary<long, CurrentCooldown>();
-        private readonly ConcurrentDictionary<long, CurrentCooldown> _loggingCooldowns = new ConcurrentDictionary<long, CurrentCooldown>();
-
-        public ConcurrentDictionary<long, CurrentCooldown> DetachCooldowns { get { return _detachCooldowns; } }
-        public ConcurrentDictionary<long, CurrentCooldown> LoggingCooldowns { get { return _loggingCooldowns; } }
+        public CooldownManager DetachCooldowns { get; } = new CooldownManager();
+        public CooldownManager LoggingCooldowns { get; } = new CooldownManager();
 
         private Persistent<RotorgunDetectorConfig> _config;
         public RotorgunDetectorConfig Config => _config?.Data;

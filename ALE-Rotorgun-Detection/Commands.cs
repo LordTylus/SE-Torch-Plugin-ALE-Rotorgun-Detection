@@ -1,14 +1,11 @@
-﻿using ALE_PcuTransferrer.Utils;
+﻿using ALE_Core.Utils;
 using NLog;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Cube;
-using Sandbox.Game.World;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Torch.Commands;
 using Torch.Commands.Permissions;
 using Torch.Mod;
@@ -42,9 +39,7 @@ namespace ALE_Rotorgun_Detection {
 
             foreach (var group in MyCubeGridGroups.Static.Physical.Groups) {
 
-                MyCubeGrid biggestGrid = null;
-
-                int gridsWithRotorCount = checkGroup(out biggestGrid, group);
+                int gridsWithRotorCount = CheckGroup(out MyCubeGrid biggestGrid, group);
 
                 if (biggestGrid != null && gridsWithRotorCount >= Plugin.MinRotorGridCount) {
 
@@ -83,7 +78,7 @@ namespace ALE_Rotorgun_Detection {
             }
         }
 
-        public static int checkGroup(out MyCubeGrid biggestGrid, MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group group) {
+        public static int CheckGroup(out MyCubeGrid biggestGrid, MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group group) {
 
             biggestGrid = null;
 
@@ -111,7 +106,6 @@ namespace ALE_Rotorgun_Detection {
 
                 HashSet<MySlimBlock> blocks = new HashSet<MySlimBlock>(cubeGrid.GetBlocks());
                 foreach (MySlimBlock block in blocks) {
-
                     if (block == null || block.CubeGrid == null || block.IsDestroyed)
                         continue;
 
@@ -120,9 +114,7 @@ namespace ALE_Rotorgun_Detection {
                     if (cubeBlock == null)
                         continue;
 
-                    MyMotorBase rotor = cubeBlock as MyMotorBase;
-
-                    if (rotor != null) {
+                    if (cubeBlock is MyMotorBase rotor) {
 
                         MyCubeGrid top = rotor.TopGrid;
                         MyCubeGrid bottom = cubeGrid;
@@ -150,7 +142,7 @@ namespace ALE_Rotorgun_Detection {
             int maxCount = 0;
 
             foreach (MyCubeGrid grid in new List<MyCubeGrid>(connectionMap.Keys))
-                maxCount = Math.Max(maxCount, getMaxTiefe(grid, connectionMap));
+                maxCount = Math.Max(maxCount, GetMaxTiefe(grid, connectionMap));
 
             return maxCount;
 
@@ -160,7 +152,7 @@ namespace ALE_Rotorgun_Detection {
             }
         }
 
-        private static int getMaxTiefe(MyCubeGrid grid, Dictionary<MyCubeGrid, List<TopPart>> connectionMap) {
+        private static int GetMaxTiefe(MyCubeGrid grid, Dictionary<MyCubeGrid, List<TopPart>> connectionMap) {
 
             int count = 1;
 
@@ -179,7 +171,7 @@ namespace ALE_Rotorgun_Detection {
                     continue;
                 }
 
-                childCount = Math.Max(childCount, getMaxTiefe(child.top, connectionMap));
+                childCount = Math.Max(childCount, GetMaxTiefe(child.top, connectionMap));
             }
                 
             return count + childCount;
