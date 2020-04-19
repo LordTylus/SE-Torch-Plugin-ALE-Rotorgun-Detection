@@ -24,20 +24,30 @@ namespace ALE_Rotorgun_Detection.Patch {
         [ReflectedMethodInfo(typeof(MyMechanicalConnectionBlockBasePatch), "DetachDetection")]
         private static readonly MethodInfo detachDetection;
 
-        static MyMechanicalConnectionBlockBasePatch() {
+        public static void ApplyLogging() {
+
+            var rules = LogManager.Configuration.LoggingRules;
+
+            for (int i = rules.Count - 1; i >= 0; i--) {
+
+                var rule = rules[i];
+
+                if (rule.LoggerNamePattern == "RotorgunDetectorPlugin")
+                    rules.RemoveAt(i);
+            }
+
+            var config = RotorgunDetectorPlugin.Instance.Config;
 
             var logTarget = new FileTarget {
-                FileName = "Logs/rotorguns-${shortdate}.log",
+                FileName = "Logs/" + config.LoggingFileName,
                 Layout = "${var:logStamp} ${var:logContent}"
             };
-
-            LogManager.Configuration.AddTarget("rotorguns", logTarget);
 
             var logRule = new LoggingRule("RotorgunDetectorPlugin", LogLevel.Debug, logTarget) {
                 Final = true
             };
 
-            LogManager.Configuration.LoggingRules.Insert(0, logRule);
+            rules.Insert(0, logRule);
 
             LogManager.Configuration.Reload();
         }

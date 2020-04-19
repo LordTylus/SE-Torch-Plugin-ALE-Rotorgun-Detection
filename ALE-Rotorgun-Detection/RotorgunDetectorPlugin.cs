@@ -1,12 +1,8 @@
 ﻿using ALE_Core.Cooldown;
+using ALE_Rotorgun_Detection.Patch;
 using NLog;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Controls;
 using Torch;
 using Torch.API;
@@ -25,8 +21,6 @@ namespace ALE_Rotorgun_Detection
         private Persistent<RotorgunDetectorConfig> _config;
         public RotorgunDetectorConfig Config => _config?.Data;
 
-        public void Save() => _config.Save();
-
         public long DetachCooldown { get { return Config.DetachCooldown * 1000; } }
         public long LoggingCooldown { get { return Config.LoggingCooldown * 1000; } }
         public int MinRotorGridCount { get { return Config.MinRotorGridCount; } }
@@ -37,6 +31,20 @@ namespace ALE_Rotorgun_Detection
         public override void Init(ITorchBase torch) {
 
             base.Init(torch);
+
+            Instance = this;
+
+            SetUpConfig();
+
+            MyMechanicalConnectionBlockBasePatch.ApplyLogging();
+        }
+
+        public void Save() {
+            _config.Save();
+            MyMechanicalConnectionBlockBasePatch.ApplyLogging();
+        }
+
+        private void SetUpConfig() {
 
             var configFile = Path.Combine(StoragePath, "RotorgunDetector.cfg");
 
@@ -55,8 +63,6 @@ namespace ALE_Rotorgun_Detection
                 _config = new Persistent<RotorgunDetectorConfig>(configFile, new RotorgunDetectorConfig());
                 _config.Save();
             }
-
-            Instance = this;
         }
     }
 }
