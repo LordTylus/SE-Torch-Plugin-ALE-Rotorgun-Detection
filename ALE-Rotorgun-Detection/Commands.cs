@@ -1,4 +1,5 @@
 ﻿using ALE_Core.Utils;
+using ALE_Rotorgun_Detection.Patch;
 using NLog;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Cube;
@@ -84,67 +85,71 @@ namespace ALE_Rotorgun_Detection {
 
             try { 
 
-            double num = 0.0;
+                double num = 0.0;
 
-            Dictionary<MyCubeGrid, List<TopPart>> connectionMap = new Dictionary<MyCubeGrid, List<TopPart>>();
+                Dictionary<MyCubeGrid, List<TopPart>> connectionMap = new Dictionary<MyCubeGrid, List<TopPart>>();
 
-            foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in group.Nodes) {
+                foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in group.Nodes) {
 
-                MyCubeGrid cubeGrid = groupNodes.NodeData;
+                    MyCubeGrid cubeGrid = groupNodes.NodeData;
 
-                if (cubeGrid == null)
-                    continue;
-
-                if (cubeGrid.Physics == null)
-                    continue;
-
-                double volume = cubeGrid.PositionComp.WorldAABB.Size.Volume;
-                if (volume > num) {
-                    num = volume;
-                    biggestGrid = cubeGrid;
-                }
-
-                HashSet<MySlimBlock> blocks = new HashSet<MySlimBlock>(cubeGrid.GetBlocks());
-                foreach (MySlimBlock block in blocks) {
-                    if (block == null || block.CubeGrid == null || block.IsDestroyed)
+                    if (cubeGrid == null)
                         continue;
 
-                    MyCubeBlock cubeBlock = block.FatBlock;
-
-                    if (cubeBlock == null)
+                    if (cubeGrid.Physics == null)
                         continue;
 
-                    if (cubeBlock is MyMotorBase rotor) {
+                    double volume = cubeGrid.PositionComp.WorldAABB.Size.Volume;
+                    if (volume > num) {
+                        num = volume;
+                        biggestGrid = cubeGrid;
+                    }
 
-                        MyCubeGrid top = rotor.TopGrid;
-                        MyCubeGrid bottom = cubeGrid;
+                    HashSet<MySlimBlock> blocks = new HashSet<MySlimBlock>(cubeGrid.GetBlocks());
+                    foreach (MySlimBlock block in blocks) {
 
-                        List<TopPart> connections;
+                        if (block == null || block.CubeGrid == null || block.IsDestroyed)
+                            continue;
 
-                        if (top != null && !connectionMap.ContainsKey(top))
-                            connectionMap.Add(top, new List<TopPart>());
+                        MyCubeBlock cubeBlock = block.FatBlock;
 
-                        if (!connectionMap.ContainsKey(bottom)) {
+                        if (cubeBlock == null)
+                            continue;
 
-                            connections = new List<TopPart>();
-                            connectionMap.Add(bottom, connections);
+                        if (cubeBlock is MyMotorStator rotor) {
 
-                        } else {
+                            if (MyMechanicalConnectionBlockBasePatch.IsIrrelevantType(rotor))
+                                continue;
 
-                            connections = connectionMap[bottom];
+                            MyCubeGrid top = rotor.TopGrid;
+                            MyCubeGrid bottom = cubeGrid;
+
+                            List<TopPart> connections;
+
+                            if (top != null && !connectionMap.ContainsKey(top))
+                                connectionMap.Add(top, new List<TopPart>());
+
+                            if (!connectionMap.ContainsKey(bottom)) {
+
+                                connections = new List<TopPart>();
+                                connectionMap.Add(bottom, connections);
+
+                            } else {
+
+                                connections = connectionMap[bottom];
+                            }
+
+                            connections.Add(new TopPart(top));
                         }
-
-                        connections.Add(new TopPart(top));
                     }
                 }
-            }
 
-            int maxCount = 0;
+                int maxCount = 0;
 
-            foreach (MyCubeGrid grid in new List<MyCubeGrid>(connectionMap.Keys))
-                maxCount = Math.Max(maxCount, GetMaxTiefe(grid, connectionMap));
+                foreach (MyCubeGrid grid in new List<MyCubeGrid>(connectionMap.Keys))
+                    maxCount = Math.Max(maxCount, GetMaxTiefe(grid, connectionMap));
 
-            return maxCount;
+                return maxCount;
 
             } catch(Exception e) {
                 Log.Error(e, "Error while checking grid!");

@@ -3,6 +3,8 @@ using ALE_Core.Utils;
 using NLog;
 using NLog.Config;
 using NLog.Targets;
+using Sandbox.Common.ObjectBuilders.Definitions;
+using Sandbox.Definitions;
 using Sandbox.Game;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Blocks;
@@ -61,10 +63,24 @@ namespace ALE_Rotorgun_Detection.Patch {
             Log.Debug("Patched MyMotorStator!");
         }
 
+        public static bool IsIrrelevantType(MyMechanicalConnectionBlockBase block) {
+
+            if (!(block is MyMotorStator stator))
+                return true;
+
+            if(stator.BlockDefinition is MyMotorStatorDefinition definition)
+                if (definition.RotorType != MyRotorType.Rotor)
+                    return true;
+
+            return false;
+        }
+
         public static bool DetachDetection(MyMechanicalConnectionBlockBase __instance) {
             
-            if (!(__instance is MyMotorBase motor))
+            if (IsIrrelevantType(__instance))
                 return true;
+
+            var motor = __instance as MyMotorBase;
 
             var session = RotorgunDetectorPlugin.Instance.Torch.CurrentSession;
             if (session == null || session.State != TorchSessionState.Loaded)

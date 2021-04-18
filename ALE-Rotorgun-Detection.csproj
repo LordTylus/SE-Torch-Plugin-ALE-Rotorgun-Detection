@@ -145,7 +145,7 @@
       <DependentUpon>Control.xaml</DependentUpon>
     </Compile>
     <Compile Include="ALE-Rotorgun-Detection\RotorgunDetectorConfig.cs" />
-    <Compile Include="ALE-Rotorgun-Detection\Patch\MyMechanicalConnectionBlockBase.cs" />
+    <Compile Include="ALE-Rotorgun-Detection\Patch\MyMechanicalConnectionBlockBasePatch.cs" />
     <Compile Include="ALE-Rotorgun-Detection\RotorgunDetectorPlugin.cs" />
     <Compile Include="ALE-Rotorgun-Detection\Commands.cs" />
     <Compile Include="ALE-Rotorgun-Detection\Properties\AssemblyInfo.cs" />
