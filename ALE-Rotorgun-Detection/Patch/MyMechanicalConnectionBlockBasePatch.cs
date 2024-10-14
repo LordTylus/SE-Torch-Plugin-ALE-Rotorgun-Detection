@@ -56,7 +56,8 @@ namespace ALE_Rotorgun_Detection.Patch {
 
         public static void Patch(PatchContext ctx) {
 
-            MethodInfo detach = typeof(MyMechanicalConnectionBlockBase).GetMethod("CreateTopPartAndAttach", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(long), typeof(bool), typeof(bool) }, null);
+            MethodInfo detach = typeof(MyMechanicalConnectionBlockBase).GetMethod("CreateTopPartAndAttach", 
+                BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(long), typeof(MyMechanicalConnectionBlockBase.MyTopBlockSize), typeof(bool) }, null);
 
             ctx.GetPattern(detach).Prefixes.Add(detachDetection);
 
